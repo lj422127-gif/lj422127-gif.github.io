@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MUSIC 4 LIFE</title>
+<title>Music 4 Life</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
@@ -12,58 +12,66 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:Inter,sans-serif;
+  font-family:Inter, sans-serif;
 }
 
 body{
-  background:#0b0b0b;
+  background:#0a0a0a;
   color:white;
+  overflow:hidden;
 }
 
 /* layout */
-.wrapper{
+.app{
   display:flex;
   height:100vh;
 }
 
-/* sidebar */
+/* SIDEBAR */
 .sidebar{
-  width:220px;
-  background:#111;
-  padding:30px;
+  width:240px;
+  background:#000;
+  padding:25px;
+  border-right:1px solid #1c1c1c;
 }
 
 .logo{
-  font-size:24px;
+  font-size:22px;
   font-weight:700;
-  margin-bottom:40px;
+  margin-bottom:30px;
 }
 
 .logo span{
   color:#1ED760;
 }
 
-.menu div{
+.nav div{
   padding:12px;
+  margin:6px 0;
   color:#aaa;
   cursor:pointer;
+  border-radius:10px;
 }
 
-.menu div:hover{
+.nav div:hover{
+  background:#1a1a1a;
   color:#1ED760;
 }
 
-/* main */
+/* MAIN */
 .main{
   flex:1;
-  padding:30px;
+  display:flex;
+  flex-direction:column;
 }
 
-/* top */
-.top{
+/* top bar */
+.topbar{
+  padding:20px;
   display:flex;
   justify-content:space-between;
-  margin-bottom:30px;
+  align-items:center;
+  border-bottom:1px solid #1c1c1c;
 }
 
 .search{
@@ -73,47 +81,63 @@ body{
   border:none;
   background:#1a1a1a;
   color:white;
+  outline:none;
 }
 
-/* songs */
-.songList{
-  margin-top:20px;
+/* content */
+.content{
+  padding:25px;
+  overflow-y:auto;
 }
 
+/* song rows */
 .song{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   padding:15px;
   margin-bottom:10px;
-  background:#151515;
+  background:#111;
   border-radius:12px;
+  transition:.2s;
   cursor:pointer;
 }
 
 .song:hover{
-  background:#1f1f1f;
+  background:#1a1a1a;
+  transform:scale(1.01);
 }
 
-.song button{
+.song.active{
+  border-left:4px solid #1ED760;
+}
+
+.song small{
+  color:#888;
+}
+
+.playBtn{
   background:#1ED760;
   border:none;
   padding:8px 14px;
-  border-radius:8px;
+  border-radius:20px;
   cursor:pointer;
+  font-weight:600;
 }
 
-/* player */
+/* PLAYER */
 .player{
   position:fixed;
   bottom:0;
-  left:220px;
+  left:240px;
   right:0;
-  background:#111;
-  padding:15px 25px;
+  height:90px;
+  background:#000;
+  border-top:1px solid #1c1c1c;
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  border-top:1px solid #222;
+  justify-content:space-between;
+  padding:0 20px;
 }
 
 .now{
@@ -121,12 +145,17 @@ body{
   flex-direction:column;
 }
 
+.now small{
+  color:#888;
+}
+
 .controls button{
   background:#1ED760;
   border:none;
-  padding:10px 16px;
-  border-radius:50px;
+  padding:12px 18px;
+  border-radius:30px;
   cursor:pointer;
+  font-weight:700;
 }
 
 </style>
@@ -134,38 +163,38 @@ body{
 
 <body>
 
-<div class="wrapper">
+<div class="app">
 
-<!-- sidebar -->
+<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">MUSIC <span>4</span> LIFE</div>
-  <div class="menu">
-    <div>Home</div>
-    <div>Artists</div>
-    <div>Songs</div>
+
+  <div class="nav">
+    <div>🏠 Home</div>
+    <div>🔍 Search</div>
+    <div>🎵 Library</div>
+    <div>❤️ Liked</div>
   </div>
 </div>
 
-<!-- main -->
+<!-- MAIN -->
 <div class="main">
 
-  <div class="top">
-    <input class="search" placeholder="Search songs..." onkeyup="searchSong(this.value)">
+  <div class="topbar">
+    <input class="search" placeholder="Search songs or artists..." onkeyup="searchSong(this.value)">
   </div>
 
-  <h2>Song Library</h2>
-
-  <div class="songList" id="songList"></div>
+  <div class="content" id="list"></div>
 
 </div>
 
 </div>
 
-<!-- player -->
+<!-- PLAYER -->
 <div class="player">
 
   <div class="now">
-    <strong id="title">Not playing</strong>
+    <strong id="title">Not Playing</strong>
     <small id="artist">---</small>
   </div>
 
@@ -181,28 +210,27 @@ body{
 
 const songs = [
   {
-    title: "Never Switch (with intro)",
-    artist: "Unknown",
-    file: "music/never-switch.mp3"
+    title:"Never Switch (with intro)",
+    artist:"Unknown Artist",
+    file:"music/never-switch.mp3"
   }
 ];
 
 let current = 0;
-
 const audio = document.getElementById("audio");
 
-function loadSongs(list = songs){
-  const container = document.getElementById("songList");
+function render(list = songs){
+  const container = document.getElementById("list");
   container.innerHTML = "";
 
   list.forEach((song, i) => {
     container.innerHTML += `
-      <div class="song">
+      <div class="song" onclick="playSong(${i})" id="song-${i}">
         <div>
           <strong>${song.title}</strong><br>
           <small>${song.artist}</small>
         </div>
-        <button onclick="playSong(${i})">Play</button>
+        <button class="playBtn">Play</button>
       </div>
     `;
   });
@@ -216,6 +244,19 @@ function playSong(i){
 
   audio.src = songs[i].file;
   audio.play();
+
+  highlight();
+}
+
+function highlight(){
+  songs.forEach((_, i) => {
+    const el = document.getElementById("song-"+i);
+    if(!el) return;
+    el.classList.remove("active");
+  });
+
+  const active = document.getElementById("song-"+current);
+  if(active) active.classList.add("active");
 }
 
 function togglePlay(){
@@ -234,23 +275,10 @@ function searchSong(value){
     s.artist.toLowerCase().includes(value)
   );
 
-  const container = document.getElementById("songList");
-  container.innerHTML = "";
-
-  filtered.forEach((song, i) => {
-    container.innerHTML += `
-      <div class="song">
-        <div>
-          <strong>${song.title}</strong><br>
-          <small>${song.artist}</small>
-        </div>
-        <button onclick="playSong(${songs.indexOf(song)})">Play</button>
-      </div>
-    `;
-  });
+  render(filtered);
 }
 
-loadSongs();
+render();
 
 </script>
 
